@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sov-data"
+version = "0.1.0"
+description = ""
+authors = ["SOV"]
+readme = "README.md"
+packages = [{include = "sov_data"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.3"
+matplotlib = "^3.10.0"
+seaborn = "^0.13.2"
+ipykernel = "^6.29.5"
+altair = "^5.5.0"
+vega-datasets = "^0.9.0"
+nbconvert = "^7.16.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
