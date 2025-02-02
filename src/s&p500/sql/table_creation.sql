@@ -42,11 +42,11 @@ CREATE TABLE bars (
     id SERIAL PRIMARY KEY,
     symbol VARCHAR(10),
     volume FLOAT,
-    vwap DECIMAL(10,4),
-    open DECIMAL(10,4),
-    close DECIMAL(10,4),
-    high DECIMAL(10,4),
-    low DECIMAL(10,4),
+    vwap DECIMAL(10,5),
+    open DECIMAL(10,5),
+    close DECIMAL(10,5),
+    high DECIMAL(10,5),
+    low DECIMAL(10,5),
     trade_count INT,
     datetime_utc TIMESTAMP WITH TIME ZONE,
     month INT,
@@ -54,3 +54,18 @@ CREATE TABLE bars (
 );
 
 CREATE UNIQUE INDEX idx_bars_symbol_datetime ON bars(symbol, datetime_utc);
+
+CREATE TABLE daily_bars (
+    id SERIAL PRIMARY KEY,
+    symbol VARCHAR(10),
+    volume FLOAT,
+    vwap DECIMAL(10,5),
+    open DECIMAL(10,5),
+    close DECIMAL(10,5),
+    high DECIMAL(10,5),
+    low DECIMAL(10,5),
+    trade_count INT,
+    day DATE,
+);
+
+CREATE UNIQUE INDEX idx_daily_bars_symbol_datetime ON daily_bars(symbol, day);

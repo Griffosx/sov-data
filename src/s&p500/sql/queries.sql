@@ -1,4 +1,12 @@
+-- Delete bars on weekends and holidays
+DELETE FROM bars
+WHERE
+    EXTRACT(DOW FROM datetime_utc::date) IN (0, 6)  -- Saturday = 6, Sunday = 0
+    OR datetime_utc::date IN (SELECT date FROM holidays);
+
+
 -- Bull or Bear bars
+CREATE VIEW bull_or_bear AS
 WITH future_moves AS (
     SELECT
         b1.id,
@@ -37,7 +45,7 @@ WITH future_moves AS (
     WHERE EXTRACT(HOUR FROM b1.datetime_utc AT TIME ZONE 'America/New_York') IN (10, 11, 12)
 )
 SELECT
-    b.*,
+    b.symbol, b.datetime_utc,
     CASE
         WHEN reached_gain AND (
             NOT reached_loss
@@ -48,3 +56,4 @@ SELECT
 FROM bars b
 JOIN future_moves fm ON b.id = fm.id
 ORDER BY b.symbol, b.datetime_utc;
+

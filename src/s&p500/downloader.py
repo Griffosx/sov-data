@@ -21,9 +21,6 @@ class PolygonConfig:
     base_url: str = "https://api.polygon.io/v2"
 
 
-def _get_bars(endpoint: str, params: Dict[str, str | int | bool]) -> list: ...
-
-
 def get_bars(
     config: PolygonConfig,
     ticker: str,
@@ -67,24 +64,28 @@ def get_bars(
 
 
 def main():
+    timespan = "hour"
+    db_table = "daily_bars" if timespan == "day" else "bars"
+
     df = pd.read_csv(DATA_DIR / "s&p500" / "s&p500-constituents.csv")
     TICKERS = df["Symbol"].tolist()
 
     engine = create_engine("postgresql://:@localhost:5432/sp500")
     config = PolygonConfig(api_key="yO8J_rooAZkTTpRjl6H4PeKsoo1Qf2Z3")
-    start_date = datetime(2021, 12, 1, tzinfo=ZoneInfo("America/New_York"))
-    end_date = datetime(2022, 1, 1, tzinfo=ZoneInfo("America/New_York"))
+    start_date = datetime(2023, 1, 1, tzinfo=ZoneInfo("America/New_York"))
+    end_date = datetime(2024, 1, 1, tzinfo=ZoneInfo("America/New_York"))
 
+    # for i, ticker in enumerate(["AAPL"]):
     for i, ticker in enumerate(TICKERS):
         start = time.time()
         logger.info(
-            f"Downloading bars for {ticker} ({i}) from {start_date.date()} to {end_date.date()}"
+            f"Downloading {db_table} for {ticker} ({i}) from {start_date.date()} to {end_date.date()}"
         )
-        bars = get_bars(config, ticker, start_date, end_date)
+        bars = get_bars(config, ticker, start_date, end_date, timespan=timespan)
         df = pd.DataFrame(bars)
         df.rename(
             columns={
-                "t": "datetime_utc",
+                "t": "datetime_utc" if timespan == "hour" else "day",
                 "o": "open",
                 "c": "close",
                 "h": "high",
@@ -97,17 +98,21 @@ def main():
         )
         if not df.empty:
             df["symbol"] = ticker
-            df["datetime_utc"] = pd.to_datetime(df["datetime_utc"], unit="ms", utc=True)
-
-            df["month"] = df["datetime_utc"].dt.month
-            df["week"] = df["datetime_utc"].dt.isocalendar().week
+            if timespan == "hour":
+                df["datetime_utc"] = pd.to_datetime(
+                    df["datetime_utc"], unit="ms", utc=True
+                )
+                df["month"] = df["datetime_utc"].dt.month
+                df["week"] = df["datetime_utc"].dt.isocalendar().week
+            else:
+                df["day"] = pd.to_datetime(df["day"], unit="ms", utc=True)
 
             logger.info(f"Downloaded {len(bars)} bars for {ticker}")
             print(df.head())
             print(df.tail())
 
             df.to_sql(
-                "bars",
+                db_table,
                 engine,
                 if_exists="append",
                 index=False,
